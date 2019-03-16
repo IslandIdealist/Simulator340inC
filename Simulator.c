@@ -7,7 +7,8 @@
 
 int main(int argc, char *argv[])
 {
-	int reg[8] = {0,0,0,0,0,0,0,0};
+	int reg[] = {0,0,0,0,0,0,0,0};
+	int regSize = sizeof(reg) / sizeof(int);
         int lineNumber = 0;
         char c;
         char *fnamein;
@@ -89,91 +90,201 @@ int main(int argc, char *argv[])
 	int pc = 0;
 	int opcode;
 	int opcodes[8] = {0,1,2,3,4,5,6,7};
-	int opcodesSize = *(&opcodesSize + 1) - opcodesSize;
+	int opcodesSize = sizeof(opcodes) / sizeof(int);
 	int fieldValue = 0;
 
-	while(pc < lines-1)
+        printf("\n@@@\nstate:\n");
+        printf("\tpc %d\n", pc);
+        printf("\tmemory:\n");
+
+        for(int i = 0; i < lines; i++)
+        {
+     		printf("\t\tmem[%d]=%d\n", i, mem[i]);
+        }
+
+        printf("\tregisters:\n");
+
+        for(int i = 0; i < regSize; i++)
+        {
+        	printf("\t\treg[%d]=%d\n", i, reg[i]);
+        }
+
+        printf("end state\n");
+
+	while(pc < lines)
 	{
 		opcode = mem[pc]>>22;
+		printf("opcode is: %d\n", opcode);
 
 		for(int i = 0; i < opcodesSize; i++)
 		{
 			if(opcode == opcodes[i])
 			{
-				if(opcode == 0)
+				if(opcode == 0)//AND
 				{
 					int regA = 0;
 					int regB = 0;
 					int destination = 0;
+					int memory = mem[pc];
 
-					mem[pc] = mem[pc] - (opcode<<22);
-					regA = mem[pc]>>19;
-					mem[pc] = mem[pc] - (regA<<19);
-					regB = mem[pc]>>16;
-					mem[pc] = mem[pc] - (regB<<16);
-					destination = mem[pc]>>0;
-					mem[pc] = mem[pc] - (destination<<0);
+					memory = memory - (opcode<<22);
+					regA = memory>>19;
+					memory = memory - (regA<<19);
+					regB = memory>>16;
+					memory = memory - (regB<<16);
+					destination = memory>>0;
+					memory = memory - (destination<<0);
 
 					reg[destination] = reg[regA] + reg[regB];
-					printf("Reg[1] contents is: %d\n", reg[1]);
+					i = opcodesSize;
 
 				}
-				else if(opcode == 2)
+				else if(opcode == 1)//NAND -- OUTPUT MIGHT BE OFF?
+                                {
+                                        int regA = 0;
+                                        int regB = 0;
+                                        int destination = 0;
+					int memory = mem[pc];
+
+                                        memory = memory - (opcode<<22);
+                                        regA = memory>>19;
+                                        memory = memory - (regA<<19);
+                                        regB = memory>>16;
+                                        memory = memory - (regB<<16);
+                                        destination = memory>>0;
+                                        memory = memory - (destination<<0);
+
+                                        reg[destination] = ~(reg[regA] & reg[regB]);
+					i = opcodesSize;
+                                }
+				else if(opcode == 2)//LW
 				{
 					int regA = 0;
                                         int regB = 0;
                                         int offset = 0;
+					int memory = mem[pc];
 
-                                        mem[pc] = mem[pc] - (opcode<<22);
-                                        regA = mem[pc]>>19;
-                                        mem[pc] = mem[pc] - (regA<<19);
-                                        regB = mem[pc]>>16;
-                                        mem[pc] = mem[pc] - (regB<<16);
-                                        offset = mem[pc]>>0;
-                                        mem[pc] = mem[pc] - (offset<<0);
+                                        memory = memory - (opcode<<22);
+                                        regA = memory>>19;
+                                        memory = memory - (regA<<19);
+                                        regB = memory>>16;
+                                        memory = memory - (regB<<16);
+                                        offset = memory>>0;
+                                       	memory = memory - (offset<<0);
                                         reg[regA] = regB + offset;
-                                        printf("Reg[%d] contents is: %d\n", regA, reg[regA]);
+					i = opcodesSize;
 
 				}
-/*				else if()
+				else if(opcode == 3)//SW
                                 {
+					int regA = 0;
+                                        int regB = 0;
+                                        int offset = 0;
+					int memory = mem[pc];
 
+                                        memory = memory - (opcode<<22);
+                                        regA = memory>>19;
+                                        memory = memory - (regA<<19);
+                                        regB = memory>>16;
+                                        memory = memory - (regB<<16);
+                                        offset = memory>>0;
+                                        memory = memory - (offset<<0);
+
+					mem[pc] = reg[regB] + offset;
+					i = opcodesSize;
 
                                 }
-				else if()
+				else if(opcode == 4)//BEQ
                                 {
+					int regA = 0;
+                                        int regB = 0;
+                                        int offset = 0;
+                                        int memory = mem[pc];
 
+                                        memory = memory - (opcode<<22);
+                                        regA = memory>>19;
+                                        memory = memory - (regA<<19);
+                                        regB = memory>>16;
+                                        memory = memory - (regB<<16);
+                                        offset = memory>>0;
+                                        memory = memory - (offset<<0);
+
+					if(reg[regA] == reg[regB])
+					{
+						pc = pc + offset;
+					}
 
                                 }
-				else if()
+				else if(opcode == 5)//JALR -- NO WORKY
                                 {
+					int regA = 0;
+                                        int regB = 0;
+                                        int offset = 0;
+                                        int memory = mem[pc];
 
+                                        memory = memory - (opcode<<22);
+                                        regA = memory>>19;
+                                        memory = memory - (regA<<19);
+                                        regB = memory>>16;
+                                        memory = memory - (regB<<16);
+                                        offset = memory>>0;
+                                        memory = memory - (offset<<0);
+
+                                        reg[regA] = pc + 1;
+					reg[regB] = 0; 
+					i = opcodesSize;
 
                                 }
-				else if()
+				else if(opcode == 6)//HALT
                                 {
+					pc++;
 
+        printf("\n@@@\nstate:\n");
+        printf("\tpc %d\n", pc);
+        printf("\tmemory:\n");
 
-                                }
-				else if()
-                                {
+        for(int i = 0; i < lines; i++)
+        {
+                printf("\t\tmem[%d]=%d\n", i, mem[i]);
+        }
 
+        printf("\tregisters:\n");
 
-                                }
-				else if()
-                                {
+        for(int i = 0; i < regSize; i++)
+        {
+                printf("\t\treg[%d]=%d\n", i, reg[i]);
+        }
 
-
-                                }*/
+                printf("end state\n");
+					printf("HALTED.\n");
+					exit(0);
+				}
 			}
 
 		}
 
 
-		pc++;
+	pc++;
+
+	printf("\n@@@\nstate:\n");
+        printf("\tpc %d\n", pc);
+        printf("\tmemory:\n");
+
+        for(int i = 0; i < lines; i++)
+        {
+                printf("\t\tmem[%d]=%d\n", i, mem[i]);
+        }
+
+        printf("\tregisters:\n");
+
+        for(int i = 0; i < regSize; i++)
+        {
+                printf("\t\treg[%d]=%d\n", i, reg[i]);
+        }
+
+        	printf("end state\n");
 	}
 
 	return 0;
 
 }
-
