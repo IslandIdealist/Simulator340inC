@@ -52,7 +52,6 @@ int main(int argc, char *argv[])
         while(fgets(line, 30, in) != NULL)//count number of lines in input file
         {
                 lines++;
-//printf("Line number is: %d\n", lines);
         }
 
         int fclose( FILE *in );
@@ -82,11 +81,6 @@ int main(int argc, char *argv[])
 
         int fclose( FILE *in );
 
-	for(int i = 0; i < lines-1; i++)
-	{
-//printf("mem[%d] is: %d\n", i, mem[i]);
-	}
-
 	int pc = 0;
 	int opcode;
 	int opcodes[8] = {0,1,2,3,4,5,6,7};
@@ -111,10 +105,10 @@ int main(int argc, char *argv[])
 
         printf("end state\n");
 
-	while(pc < lines)
+	int instructionCount = 0;
+	while(pc <= lines)
 	{
 		opcode = mem[pc]>>22;
-		printf("opcode is: %d\n", opcode);
 
 		for(int i = 0; i < opcodesSize; i++)
 		{
@@ -139,7 +133,7 @@ int main(int argc, char *argv[])
 					i = opcodesSize;
 
 				}
-				else if(opcode == 1)//NAND -- OUTPUT MIGHT BE OFF?
+				else if(opcode == 1)//NAND
                                 {
                                         int regA = 0;
                                         int regB = 0;
@@ -154,22 +148,7 @@ int main(int argc, char *argv[])
                                         destination = memory>>0;
                                         memory = memory - (destination<<0);
 
-					int regABinary[1000];
-					int regBBinary[1000];
-
-					for(i=0;regA>0;i++)
-					{
-						regABinary[i]=regA%2;
-						regA=regA/2;
-					}
-					for(i=0;regB>0;i++)
-                                        {
-                                                regBBinary[i]=regB%2;
-                                                regB=regB/2;
-                                        }
-
-					
-                                        reg[destination] = ~(reg & reg[regB]);
+                                        reg[destination] = ~(reg[regA] & reg[regB]);
 					i = opcodesSize;
                                 }
 				else if(opcode == 2)//LW
@@ -183,10 +162,11 @@ int main(int argc, char *argv[])
                                         regA = memory>>19;
                                         memory = memory - (regA<<19);
                                         regB = memory>>16;
-                                        memory = memory - (regB<<16);
+			                memory = memory - (regB<<16);
                                         offset = memory>>0;
                                        	memory = memory - (offset<<0);
-                                        reg[regA] = regB + offset;
+
+                                        reg[regA] = mem[reg[regB] + offset];
 					i = opcodesSize;
 
 				}
@@ -224,6 +204,11 @@ int main(int argc, char *argv[])
                                         offset = memory>>0;
                                         memory = memory - (offset<<0);
 
+					if(offset > 32767)
+					{
+						offset -= 65536;
+					}
+
 					if(reg[regA] == reg[regB])
 					{
 						pc = pc + offset;
@@ -242,36 +227,17 @@ int main(int argc, char *argv[])
                                         memory = memory - (regA<<19);
                                         regB = memory>>16;
                                         memory = memory - (regB<<16);
-                                        offset = memory>>0;
-                                        memory = memory - (offset<<0);
 
                                         reg[regA] = pc + 1;
-					reg[regB] = 0; 
-					i = opcodesSize;
+					pc = reg[regB];
+					pc--;
 
                                 }
 				else if(opcode == 6)//HALT
                                 {
-					pc++;
-
-        printf("\n@@@\nstate:\n");
-        printf("\tpc %d\n", pc);
-        printf("\tmemory:\n");
-
-        for(int i = 0; i < lines; i++)
-        {
-                printf("\t\tmem[%d]=%d\n", i, mem[i]);
-        }
-
-        printf("\tregisters:\n");
-
-        for(int i = 0; i < regSize; i++)
-        {
-                printf("\t\treg[%d]=%d\n", i, reg[i]);
-        }
-
-                printf("end state\n");
-					printf("HALTED.\n");
+					instructionCount++;
+					printf("machine halted.\n");
+					printf("INSTRUCTIONS: %d\n", instructionCount);
 					exit(0);
 				}
 			}
@@ -280,6 +246,7 @@ int main(int argc, char *argv[])
 
 
 	pc++;
+	instructionCount++;
 
 	printf("\n@@@\nstate:\n");
         printf("\tpc %d\n", pc);
