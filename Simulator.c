@@ -154,7 +154,22 @@ int main(int argc, char *argv[])
                                         destination = memory>>0;
                                         memory = memory - (destination<<0);
 
-                                        reg[destination] = ~(reg[regA] & reg[regB]);
+					int regABinary[1000];
+					int regBBinary[1000];
+
+					for(i=0;regA>0;i++)
+					{
+						regABinary[i]=regA%2;
+						regA=regA/2;
+					}
+					for(i=0;regB>0;i++)
+                                        {
+                                                regBBinary[i]=regB%2;
+                                                regB=regB/2;
+                                        }
+
+					
+                                        reg[destination] = ~(reg & reg[regB]);
 					i = opcodesSize;
                                 }
 				else if(opcode == 2)//LW
