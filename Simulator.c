@@ -211,11 +211,19 @@ int main(int argc, char *argv[])
 
 					if(reg[regA] == reg[regB])
 					{
-						pc = pc + offset;
+						if(offset<=0)
+						{
+					
+							pc = pc + (offset-1);//have to -1 because pc++ at bottom of loop
+						}
+						else
+						{
+							pc = pc + (offset-2);//have to -1 because pc++ at bottom of loop
+						}
 					}
 
                                 }
-				else if(opcode == 5)//JALR -- NO WORKY
+				else if(opcode == 5)//JALR -- NO WORKY( might worky?)
                                 {
 					int regA = 0;
                                         int regB = 0;
@@ -245,28 +253,28 @@ int main(int argc, char *argv[])
 		}
 
 
-	pc++;
-	instructionCount++;
+		pc++;
+		instructionCount++;
 
-	printf("\n@@@\nstate:\n");
-        printf("\tpc %d\n", pc);
-        printf("\tmemory:\n");
+		printf("\n@@@\nstate:\n");
+      		printf("\tpc %d\n", pc);
+        	printf("\tmemory:\n");
 
-        for(int i = 0; i < lines; i++)
-        {
-                printf("\t\tmem[%d]=%d\n", i, mem[i]);
-        }
+        	for(int i = 0; i < lines; i++)
+        	{
+               		printf("\t\tmem[%d]=%d\n", i, mem[i]);
+        	}
 
-        printf("\tregisters:\n");
+        	printf("\tregisters:\n");
 
-        for(int i = 0; i < regSize; i++)
-        {
-                printf("\t\treg[%d]=%d\n", i, reg[i]);
-        }
+        	for(int i = 0; i < regSize; i++)
+        	{
+                	printf("\t\treg[%d]=%d\n", i, reg[i]);
+        	}
 
-        	printf("end state\n");
+        		printf("end state\n");
 	}
 
-	return 0;
+return 0;
 
 }
